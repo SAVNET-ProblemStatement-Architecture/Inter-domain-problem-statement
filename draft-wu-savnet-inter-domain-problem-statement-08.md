@@ -37,6 +37,14 @@ author:
   city: Beijing
   country: China # use TLD (except UK) or country name
   email: huangmingqing@huawei.com
+- ins: K. Sriram
+  name: Kotikalapudi Sriram
+  org: USA National Institute of Standards and Technology
+  abbrev: USA NIST
+  city: Gaithersburg
+  region: MD
+  country: United States of America # use TLD (except UK) or country name
+  email: ksriram@nist.gov
 - ins: L. Qin
   name: Lancheng Qin
   org: Tsinghua University
