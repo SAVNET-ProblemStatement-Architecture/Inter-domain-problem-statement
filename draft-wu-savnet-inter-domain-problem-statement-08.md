@@ -37,13 +37,6 @@ author:
   city: Beijing
   country: China # use TLD (except UK) or country name
   email: huangmingqing@huawei.com
-- ins: K. Sriram
-  name: Kotikalapudi Sriram
-  org: USA National Institute of Standards and Technology
-  city: Gaithersburg
-  region: MD
-  country: United States of America # use TLD (except UK) or country name
-  email: ksriram@nist.gov
 - ins: L. Qin
   name: Lancheng Qin
   org: Tsinghua University
@@ -150,6 +143,10 @@ Improper Block:
 
 Improper Permit: 
 : The validation results that the packets with spoofed source addresses  are permitted improperly due to inaccurate SAV rules.
+
+Real forwading paths: 
+: The paths that the traffic go through in the data plane. 
+
 
 # Existing Inter-domain SAV Mechanisms
 
@@ -365,6 +362,14 @@ In cases where it is difficult to acquire all the real forwarding paths exactly,
 {: #accurate_validation title="An example to illustrate accurate validation in all directions of an AS"}
 
 {{accurate_validation}} is used as an example to illustrate how to avoid improper block and minimize improper permit in all directions of an AS based on different SAV information sources. AS 3 is the provider of AS 4, while AS 4 is the provider of AS 2 and the provider or lateral peer of AS 1, and AS 2 is the provider of AS 1. Assuming prefixes P1, P2, P3, P4, and P5 are all the prefixes in the network. Inter-domain SAV has been deployed by AS 1 and AS 4, but not by other ASes. Here, the focus is on how to conduct SAV in all directions of AS 4. When only RIB is available, SAV at AS 4 towards AS 1 allows prefixes P1 and P5, SAV at AS 4 towards AS 2 allows prefixes P1, P2, and P5, and SAV at AS 4 towards AS 3 allows prefixes P1, P2, P3, and P5. With RPKI ROA and ASPA deployed by both AS 1 and AS 4, SAV at AS 4 towards AS 1 allows prefixes P1 and P5, SAV at AS 4 towards AS 2 allows prefixes P1, P2, and P5, and SAV at AS 4 towards AS 3 blocks P1 and P5. Moreover, when SAV-tailored information carrying real data-plane forwarding paths of prefixes is available, SAV at AS 4 towards AS 1 allows P5, SAV at AS 4 towards AS 2 allows P1 and P2, and SAV at AS 4 towards AS 3 blocks P1, P2, and P5. Therefore, more precise SAV-related information can help attain 0% improper block and reduce improper permit to almost 0%.
+
+## Developing A Unified SAV Communication Protocol
+
+In order to learn the real forwarding paths of prefixes from ASes, a unified SAV communication protocol SHOULD be developed by the new inter-domain SAV mechanism for exchanging the SAV-related information such as prefixes, their incoming interfaces, and topological information of ASes. The unified SAV communication protocol will define the specific information to be communicated, the communication format, and the operations for originating, processing, propagating, and terminating the messages which carry the predefined information.
+
+The need for a unified SAV communication protocol arises from the fact that different ASes are managed by different network operators, who require a mutually recognized and supported protocol to send their own source prefixes that need to be protected by other ASes. Additionally, based on the protocol, an AS can receive, propagate, and process the messages carrying the source prefixes from other ASes.
+
+Moreover, the unified SAV communication protocol SHOULD perform security authentication to secure the communicated information and prevent malicious ASes from generating incorrect or forged information. The protocol SHOULD also be scalable independently from the growth of the deployed ASes.
 
 ## Working in Incremental/Partial Deployment
 
