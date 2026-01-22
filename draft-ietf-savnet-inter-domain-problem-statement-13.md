@@ -6,7 +6,7 @@ submissiontype: IETF
 area: General [REPLACE]
 wg: Internet Engineering Task Force
 
-docname: draft-ietf-savnet-inter-domain-problem-statement-12
+docname: draft-ietf-savnet-inter-domain-problem-statement-13
 
 title: Gap Analysis, Problem Statement, and Requirements for Inter-Domain SAV 
 abbrev: Inter-domain SAVNET Problem Statement
@@ -53,7 +53,6 @@ normative:
   RFC8704:
   RFC2827:
   RFC4364:
-  RFC6811:
   RFC4786:
   RFC7094:
 informative:
@@ -89,7 +88,7 @@ informative:
     title: "Source Address Validation Using BGP UPDATEs, ASPA, and ROA (BAR-SAV)"
     author:
      - org: NIST, Akamai
-    date: 2024
+    date: 2025
 
 
 --- abstract
@@ -100,7 +99,10 @@ This document provides a gap analysis of existing inter-domain source address va
 
 # Introduction
 
-Source address validation (SAV) is crucial for protecting networks from source address (SA) spoofing attacks {{RFC2827}} {{RFC3704}} {{RFC8704}}. The MANRS initiative advocates deploying SAV as close to the source as possible {{manrs}}, and access networks are the first line of defense against source address spoofing. However, access networks face various challenges in deploying SAV mechanisms due to different network environments, router vendors, and operational preferences. Hence, SAV may not be deployed ubiquitously in access networks. In addition, SA spoofing may also originate in ISP networks at higher levels of hierarchy in the Internet. So, deployment of SAV mechanisms in the edge routers of enterprises as well as the ISP networks (at different hierarchichal levels or tiers) is needed to prevent source address spoofing along the data forwarding paths. {{RFC5210}} highlights the importance of SAV at various network locations: access, intra-domain (intra-AS), and inter-domain (inter-AS). This document focuses on providing gap analysis and describing the problem space of existing inter-domain SAV solutions, and defining the requirements for a new solution of these problems. Access Control List (ACL) and unicast Reverse Path Forwarding (uRPF) techniques are currently utilized for inter-domain SAV {{RFC3704}} {{RFC8704}}. Here only existing IETF RFCs are considered as the state of the art (BCP 38 {{RFC2827}} and BCP 84 {{RFC3704}} {{RFC8704}}); IETF works-in-progress are not included in that.
+Source address validation (SAV) is crucial for protecting networks from source address (SA) spoofing attacks {{RFC2827}} {{RFC3704}} {{RFC8704}}. The MANRS initiative advocates deploying SAV as close to the source as possible {{manrs}}, and access networks are the first line of defense against source address spoofing. However, access networks face various challenges in deploying SAV mechanisms due to different network environments, router vendors, and operational preferences. Hence, SAV may not be deployed ubiquitously in access networks. In addition, SA spoofing may also originate in ISP networks at higher levels of hierarchy in the Internet. So, deployment of SAV mechanisms in the edge routers of enterprises as well as the ISP networks (at different hierarchichal levels or tiers) is needed to prevent source address spoofing along the data forwarding paths. 
+{{RFC5210}} highlights the importance of SAV at various network locations: access, intra-domain (intra-AS), and inter-domain (inter-AS). 
+Throughout this document, inter-domain SAV refers to SAV on AS-to-AS interfaces that carry External BGP (E-BGP) sessions, i.e., interfaces between customer–provider, peering, or RS–RS-client relationships.
+The focus of this document is to provide a gap analysis and describe the problem space of existing inter-domain SAV solutions, and to define the requirements for a new solution of these problems. Access Control List (ACL) and unicast Reverse Path Forwarding (uRPF) techniques are currently utilized for inter-domain SAV {{RFC3704}} {{RFC8704}}. Here only existing IETF RFCs are considered as the state of the art (BCP 38 {{RFC2827}} and BCP 84 {{RFC3704}} {{RFC8704}}); IETF works-in-progress are not included in that.
 
 The terms customer, provider (transit provider), and lateral peer (non-transit peer; peer (for simplicity)) used in this document are consistent with those defined in {{RFC7908}} {{RFC9234}}. Further, {{RFC9234} mentions Route Server (RS) and RS-client. An RS-to-RS-client interface is akin to a customer interface, and an RS-client-to-RS interface is akin to a provider interface for the purposes of SAV.      
 
@@ -144,6 +146,9 @@ Improper Block:
 Improper Permit: 
 : The validation results that the packets with spoofed source addresses are permitted improperly due to inaccurate SAV rules.
 
+Customer Cone: The Customer Cone (CC) of a given AS, denoted as AS-A, includes: (1) AS-A itself, (2) AS-A's direct customers (ASes), (3) The customers of AS-A's direct customers (indirect customers), (4) And so on, recursively, following all chains of provider-to-customer (P2C) links down the hierarchy.  
+
+Customer Cone Prefixes: The term customer cone prefixes (or CC prefixes) refers to the set of prefixes originated by or used for source address in the data packets originated from the ASes in the CC. Prefixes that are intended to be originated or used for source address (e.g., based on registration of relevant RPKI objects by the CC ASes) are also included.
 
 # Existing Inter-domain SAV Mechanisms
 
@@ -157,7 +162,6 @@ Inter-domain SAV is typically performed at the AS level (on a per neighbor-AS-in
   * Feasible Path uRPF (FP-uRPF) {{RFC3704}}: maintains a reverse path forwarding (RPF) list, which contains the prefixes and all their permissible routes including the optimal and alternative ones. It permits an incoming packet only if the packet's source address is encompassed in the prefixes of the RPF list and its incoming interface is included in the permissible routes of the corresponding prefix. FP-uRPF is recommended to be deployed at customer interfaces or lateral peer interfaces, especially those that are connected to multi-homed customer ASes {{nist}}.
   * Virtual routing and forwarding (VRF) uRPF {{RFC4364}} {{urpf}} {{manrs}}: VRF uRPF uses a separate VRF table for each external BGP peer and is only a way of implementation for a SAV table.
   * Enhanced Feasible Path uRPF (EFP-uRPF) {{RFC8704}}: EFP-uRPF is based on the principle that if BGP updates for multiple prefixes with the same origin AS were received on different interfaces (at border routers), then incoming data packets with source addresses in any of those prefixes should be accepted on any of those interfaces. The EFP-uRPF specification provides two alternate algorithms: Algorithm A which is stricter with a greater sense of directionality and Algorithm B which is more permissive with a lesser sense of directionality. EFP-uRPF can more effectively accommodate asymmetric routing scenarios than FP-uRPF. EFP-uRPF is a part of BCP84. EFP-uRPF can be used at customer as well as lateral peer interfaces of an AS. It is not deployed yet in the Internet. 
-* Carrier Grade NAT (CGN): CGN is a network technology used by service providers to translate between private and public IPv4 addresses within their network. CGN enables service providers to assign private IPv4 addresses to their customer ASes instead of public, globally unique IPv4 addresses. The private side of the CGN faces the customer ASes, and when an incoming packet is received from a customer AS, CGN checks its source address. If the source address is included in the address list of the CGN's private side, CGN performs address translation. Otherwise, it forwards the packet without translation. However, since CGN cannot determine whether the source address of an incoming packet is spoofed or not, additional SAV mechanisms need to be implemented to prevent source address spoofing {{manrs}}.
 
 # Gap Analysis {#gap}
 
@@ -328,7 +332,8 @@ In scenarios like these, Strict uRPF, FP-uRPF, VRF uRPF, and EFP-uRPF with algor
 
 ## SAV at Provider/Peer Interfaces {#sav_at_p}
 
-SAV is used at provider/peer interfaces to validate traffic entering the customer cone, including both legitimate and spoofing traffic. To prevent packets with spoofed source addresses from the provider/peer AS, ACL-based ingress filtering and/or Loose uRPF can be deployed {{nist}}. 
+SAV is used at provider/peer interfaces for validating external traffic, including traffic entering the customer cone and transit traffic.
+To prevent packets with spoofed source addresses from the provider/peer AS, ACL-based ingress filtering and/or Loose uRPF can be deployed {{nist}}. 
 
 ~~~~~~~~~~
 +------------------------+------------+---------------+
@@ -509,9 +514,10 @@ The new inter-domain SAV mechanism SHOULD update SAV rules and detect the change
 
 The new inter-domain SAV mechanism MUST be able to adapt to dynamic networks and asymmetric routing scenarios automatically, instead of relying on manual update. At least, it MUST have less operational overhead than ACL-based ingress filtering.
 
-### Guaranteeing Convergence
-The new inter-domain SAV mechanism SHOULD promptly detect the network changes and finish the convergence process quickly. It is essential that the new inter-domain SAV mechanism converges towards accurate SAV rules in a proper manner, effectively reducing improper block and improper permit throughout the whole convergence process.
-
+### Guaranteeing Fast Convergence
+The new inter-domain SAV mechanism SHOULD promptly detect network changes and converge to the correct SAV rules in a timely manner.
+In this context, convergence refers to the stabilization of SAV rules on the AS-to-AS interfaces performing SAV.
+It is essential that the new inter-domain SAV mechanism converges towards correct SAV rules in a proper manner, minimizing both improper block and improper permit during the entire convergence process.
 
 # Inter-domain SAV Scope
 
