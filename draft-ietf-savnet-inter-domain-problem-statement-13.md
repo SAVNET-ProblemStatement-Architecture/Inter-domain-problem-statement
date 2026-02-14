@@ -158,10 +158,10 @@ Customer Cone Prefixes (CC Prefixes):
 : IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more Autonomous Systems (ASes) within the CC.
 
 SAV-related Information:
-: Objects registered using Resource Public Key Infrastructure (RPKI). This can include existing RPKI object types or new type(s) that may be proposed. 
+: Objects registered using Resource Public Key Infrastructure (RPKI). This can include existing RPKI object types (e.g., ROAs and ASPAs) or new type(s) that may be proposed. 
 
 SAV-specific Information:
-: It refers to any information that may be defined and exchanged between ASes specifically for SAV purposes using a potentially new inter-AS communication protocol.
+: Information dedicated to SAV, which may be defined and exchanged between ASes using a potentially new inter-AS communication protocol. The information may also be in the form of new RPKI object type(s) meant to assist SAV.
 
 # Existing Inter-domain SAV Mechanisms {#SAV_methods}
 
