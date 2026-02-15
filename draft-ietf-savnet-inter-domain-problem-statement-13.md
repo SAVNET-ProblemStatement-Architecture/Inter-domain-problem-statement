@@ -6,7 +6,7 @@ submissiontype: IETF
 area: General [REPLACE]
 wg: Internet Engineering Task Force
 
-docname: draft-ietf-savnet-inter-domain-problem-statement-13
+docname: draft-ietf-savnet-inter-domain-problem-statement-14
 
 title: Gap Analysis, Problem Statement, and Requirements for Inter-Domain SAV 
 abbrev: Inter-domain SAVNET Problem Statement
@@ -123,17 +123,17 @@ The following summarizes the fundamental problems with existing SAV mechanisms, 
 
 * High operational overhead (HOO): ACL-based ingress SAV filtering introduces significant operational overhead, as it needs to update ACL rules manually to adapt to prefix or routing changes in a timely manner. The HOO issue does not pertain to existing uRPF-based mechanisms.
 
-To address these problems, this document specifies ({{req}}) the following key technical requirements for a new solution:
+To address these problems, this document specifies ({{req}}) the following key technical requirements for any new solution:
 
-* Improved SAV accuracy over existing mechanisms: The new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms.
+* Improved SAV accuracy over existing mechanisms: Any new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms.
 
-* Reduced operational overhead: The new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. A new solution MUST have less operational overhead than ACL-based ingress SAV filtering.
+* Reduced operational overhead: Any new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such mechanism MUST have less operational overhead than ACL-based ingress SAV filtering.
 
-* Benefit in incremental/partial deployment: A new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) object registrations). It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
+* Benefit in incremental/partial deployment: Any new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) object registrations). It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 
-* Automatic updates to the SAV list and efficient convergence: The new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}). It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
+* Automatic updates to the SAV list and efficient convergence: Any new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}). It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
 
-* Providing necessary security guarantee: If a proposed SAV method requires exchanging SAV-related or SAV-specific information between ASes, security mechanisms SHOULD exist to assure trustworthiness of the information.
+* Providing necessary security guarantee: If any proposed new SAV method requires exchanging SAV-related or SAV-specific information between ASes, security mechanisms SHOULD exist to assure trustworthiness of the information.
 
 ## Requirements Language
 
@@ -158,7 +158,7 @@ Customer Cone Prefixes (CC Prefixes):
 : IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more Autonomous Systems (ASes) within the CC.
 
 SAV-related Information:
-: Objects registered using Resource Public Key Infrastructure (RPKI). This can include existing RPKI object types (e.g., ROAs and ASPAs) or new type(s) that may be proposed. 
+: Objects registered using Resource Public Key Infrastructure (RPKI). This can include existing RPKI object types (e.g., ROAs and ASPAs) or any new type(s) that may be proposed. 
 
 SAV-specific Information:
 : Information dedicated to SAV, which may be defined and exchanged between ASes using a potentially new inter-AS communication protocol. The information may also be in the form of new RPKI object type(s) meant to assist SAV.
@@ -169,7 +169,7 @@ Inter-domain SAV is typically performed at the AS level (on a per neighbor-AS-in
 
 * ACL-based ingress filtering {{RFC3704}}: ACL-based ingress SAV filtering is a technique that relies on ACL rules to filter packets based on their source addresses. However, ACL-based ingress SAV filtering introduces significant operational overhead, as ACL rules need to be updated in a timely manner to reflect prefix or routing changes in the inter-domain routing system. One may think of using ACL as a disallow list on a provider interface to block source prefixes that are clearly invalid in the inter-domain routing context, such as IANA special purpose or unallocated IPv4/IPv6 prefixes, etc. But it is impractical to store and maintain a very large and dynamically varying set of unallocated IPv6 prefixes. Also, for the customer interfaces, the ACL method is impractical while other techniques (as described below) are more effective. ACL-based ingress SAV filtering has applicability for broadband cable or digital subscriber access loop (DSL) access networks where the service provider has clear knowledge of IP address prefixes it has allocated to manage those services. Here ACL can be used in an allow-list form.
 
-* uRPF-based mechanisms: A class of SAV mechanisms are based on Unicast Reverse Path Forwarding (uRPF) {{RFC3704}} {{RFC8704}}. The core idea of uRPF for SAV is to exploit the symmetry of inter-domain routing: in many cases, the best next hop for a destination is also the best previous hop for the source. In other words, if a packet arrives from a certain interface, the source address of that packet should be reachable via the same interface, according to the FIB. However, symmetry in routing does not always hold in practice, and to address cases where it does not hold, many enhancements and modes of uRPF are proposed. Different modes of uRPF have different levels of strictness and flexibility, and network operators can choose from them to suit particular network scenarios. We briefly describe these modes as follows:
+* uRPF-based mechanisms: A class of SAV mechanisms are based on Unicast Reverse Path Forwarding (uRPF) {{RFC3704}} {{RFC8704}}. The core idea of uRPF for SAV is to exploit the symmetry of inter-domain routing: in many cases, the best next hop for a destination is also the best previous hop for the source. In other words, if a packet arrives from a certain interface, the source address of that packet should be reachable via the same interface, according to the FIB. However, symmetry in routing does not always hold in practice, and to address cases where it does not hold, many enhancements and modes of uRPF have evolved. Different modes of uRPF have different levels of strictness and flexibility, and network operators can choose from them to suit particular network scenarios. We briefly describe these modes as follows:
 
   * Strict uRPF {{RFC3704}}: Strict uRPF is the most stringent mode. It permits a packet only if it has a source address that is covered by a prefix in the FIB, and the next hop for that prefix is the same interface that the packet arrived on. This mode can be deployed at customer interfaces in some scenarios, e.g., a directly connected single-homed stub customer AS {{nist}}.
   
@@ -461,35 +461,35 @@ The limitations of existing uRPF-based mechanisms are due to their exclusive rel
 
 # Requirements for New Inter-domain SAV Mechanisms {#req}
 
-This section lists the requirements for new inter-domain SAV mechanisms which can help bridge the technical gaps of existing mechanisms.
+This section lists the requirements for any new inter-domain SAV mechanisms which may be proposed to bridge the technical gaps of existing mechanisms.
 
 ## Accurate Validation
 
-The new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms. The requirement applies for all directions of AS peering (customer, provider, and peer).
+Any new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms. The requirement applies for all directions of AS peering (customer, provider, and peer).
 
 ## Reducing Operational Overhead
 
-The new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. A new solution MUST have less operational overhead than ACL-based ingress SAV filtering.
+Any new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such solution MUST have less operational overhead than ACL-based ingress SAV filtering.
 
 ## Early Adopters Benefit in Incremental/Partial Deployment
 
-A new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) objects such as ROAs and ASPAs). 
+Any new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) objects such as ROAs and ASPAs). 
 It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 
 ## Providing Necessary Security Guarantee
 
-SAV-related information, such as RPKI objects, may be used for designing a more accurate SAV. Such information must be protected at their repositories and during communication to the relying parties (the BGP security community is already diligent about this). If a proposed SAV method requires exchanging SAV-specific information between ASes, security mechanisms must exist to assure trustworthiness of the information. The idea is to prevent malicious injection or alteration of the SAV-specific information.
+SAV-related information, such as RPKI objects, may be used for designing a more accurate SAV. Such information must be protected at their repositories and during communication to the relying parties (the BGP security community is already diligent about this). If any proposed SAV method requires exchanging SAV-specific information between ASes, security mechanisms must exist to assure trustworthiness of the information. The idea is to prevent malicious injection or alteration of the SAV-specific information.
 
 ## Automatic Updates to the SAV List and Efficient Convergence
 
-The new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}).
+Any new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}).
 It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
 In this context, convergence refers to the stabilization of the SAV lists on the AS-to-AS interfaces performing SAV.
-It is essential that the new inter-domain SAV mechanism converges to the correct updated SAV list in a proper manner, minimizing both improper block and improper permit during the process.
+It is essential that any new SAV mechanism converges to the correct updated SAV list in a proper manner, minimizing both improper block and improper permit during the process.
 
 # Inter-domain SAV Scope
 
-The new inter-domain SAV mechanisms should work in the same Internet Protocol (IP) address scenarios as existing SAV methods do. Generally, it includes all IP-encapsulated scenarios:
+Any new inter-domain SAV mechanisms should work in the same Internet Protocol (IP) address scenarios as existing SAV methods do. Generally, it includes all IP-encapsulated scenarios:
 
 * Native IP forwarding: This includes both the global routing table based forwarding and Customer Edge (CE) site forwarding of VPN traffic.
 * IP-encapsulated Tunnel (IPsec, GRE, SRv6, etc.): In this scenario, the focus is on the validation of the outer layer IP source address.
@@ -499,7 +499,7 @@ The scope does not include:
 
 * Non-IP packets: This includes MPLS label-based forwarding and other non-IP-based forwarding.
 
-In addition, the new inter-domain SAV mechanisms MUST NOT modify the data plane packets. Existing architectures or protocols or mechanisms can be inherited by the new SAV mechanism to achieve better SAV effectiveness.
+In addition, any new inter-domain SAV mechanisms MUST NOT modify the data plane packets. Existing architectures or protocols or mechanisms can be inherited by any such mechanism to achieve better SAV effectiveness.
 
 # Security Considerations {#Security}
 
