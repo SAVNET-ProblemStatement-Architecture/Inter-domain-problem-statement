@@ -6,7 +6,7 @@ submissiontype: IETF
 area: General [REPLACE]
 wg: Internet Engineering Task Force
 
-docname: draft-ietf-savnet-inter-domain-problem-statement-14
+docname: draft-ietf-savnet-inter-domain-problem-statement-15
 
 title: Gap Analysis, Problem Statement, and Requirements for Inter-Domain SAV 
 abbrev: Inter-domain SAVNET Problem Statement
@@ -93,6 +93,14 @@ informative:
      - org: Cisco Systems, Inc.
     date: 2005
 
+  SAC-004:
+    target: https://www.icann.org/en/ssac/publications/documents/sac-004-security-and-stability-advisory-committee-securing-the-edge-17-10-2002-en
+    title: "SAC 004 | Security and Stability Advisory Committee - Securing the Edge"
+    author:
+    - ins: Paul Vixie
+      org: ISC
+    date: 2002
+
 ...
 
 --- abstract
@@ -105,35 +113,36 @@ This document provides a gap analysis of existing inter-domain source address va
 
 Source Address Validation (SAV) is a fundamental mechanism for detecting and mitigating source address spoofing attacks {{RFC2827}} {{RFC5210}} {{RFC3704}} {{RFC8704}}. 
 This document provides a gap analysis of existing inter-domain SAV mechanisms, describes the problem space, and defines the requirements for technical improvements.
-The corresponding work related to intra-domain SAV is documented in [I-D.ietf-savnet-intra-domain-problem-statement].    
+The corresponding work related to intra-domain SAV is documented in [I-D.ietf-savnet-intra-domain-problem-statement]. 
 
-<!-- Intra-domain SAV is typically deployed on a domain’s external interfaces, including interfaces facing a host, a non-BGP customer, and an external AS (see [I-D.ietf-savnet-intra-domain-problem-statement]). For example, at interfaces facing an external AS, it prevents the external AS from using the domain’s internal-use-only addresses. However, intra-domain SAV cannot determine whether traffic from an external AS spoofs another external AS’s address space. -->
+In this document, inter-domain SAV refers to SAV on AS-to-AS interfaces that carry external BGP (eBGP) sessions. The eBGP sessions include Customer-to-Provider (C2P), Provider-to-Customer (P2C), lateral peering (P2P), and Route Server (RS) to RS-client connections. The terms customer, provider (transit provider), and lateral peer (non-transit peer; peer (for simplicity)) used in this document are consistent with those defined in {{RFC7908}} {{RFC9234}}. Further, {{RFC9234} mentions RS and RS-client. An RS-to-RS-client interface is akin to the customer interface. For the purposes of SAV, an RS-client-to-RS interface may be treated (1) like a provider interface for simplicity, or (2) like a union of lateral peers considering all the ASes the RS-client chose to peer with at the IXP RS. 
 
-In this document, inter-domain SAV refers to SAV on AS-to-AS interfaces that carry external BGP (eBGP) sessions. The eBGP sessions include Customer-to-Provider (C2P), Provider-to-Customer (P2C), lateral peering (p2p), and Route Server to RS-client connections. The terms customer, provider (transit provider), and lateral peer (non-transit peer; peer (for simplicity)) used in this document are consistent with those defined in {{RFC7908}} {{RFC9234}}. Further, {{RFC9234} mentions Route Server (RS) and RS-client. An RS-to-RS-client interface is akin to the customer interface. For the purposes of SAV, an RS-client-to-RS interface may be treated (1) like a provider interface for simplicity, or (2) like a union of lateral peers considering all the ASes the RS-client chose to peer with at the IXP RS. 
-
-Access Control List (ACL) and unicast Reverse Path Forwarding (uRPF) based techniques are currently utilized to some extent for inter-domain SAV. In this document, the inter-domain SAV methods from only the existing IETF RFCs (BCP 38 {{RFC2827}} and BCP 84 {{RFC3704}} {{RFC8704}}) are considered for the gap analysis; IETF work-in-progress documents are not considered. This document analyzes the available methods and attempts to answer: (1) what are the technical gaps ({{gap}}), (2) what are the outstanding problems (problem statement) ({{problem}}), and (3) what are the practical requirements for the solutions to these problems ({{req}}).
-
-<!--Beyond the capability of intra-domain SAV, inter-domain SAV leverages inter-domain information to enable detection of cross-external-AS source address spoofing on eBGP interfaces.-->
+Access Control List (ACL) and unicast Reverse Path Forwarding (uRPF) based techniques are currently utilized to some extent for inter-domain SAV. In this document, the inter-domain SAV methods from only the existing IETF RFCs (BCP 38 {{RFC2827}} and BCP 84 {{RFC3704}} {{RFC8704}}) are considered for the gap analysis; IETF work-in-progress documents are not considered. 
+Other documents, such as {{SAC-004}}, discuss the underlying anti-spoofing problem space from an operational and security perspective, but are not used as the basis of the method-by-method gap analysis.
+This document analyzes the available methods and attempts to answer: (1) what are the technical gaps ({{gap}}), (2) what are the outstanding problems (problem statement) ({{problem}}), and (3) what are the practical requirements for the solutions to these problems ({{req}}).
 
 The following summarizes the fundamental problems with existing SAV mechanisms, as analyzed in {{gap}} and {{problem}}:
 
 * Improper block: Existing uRPF-based mechanisms suffer from improper block (false positives) in two inter-domain scenarios: limited propagation of a prefix and hidden prefix.
 
-* Improper permit: With some existing uRPF-based SAV mechanisms, improper permit (false negatives) can happen on any type of interface (customer, lateral peer, or provider). Specifically, if the method relaxes the directionality constraint {{RFC3704}} {{RFC8704}}} to try to achieve zero improper blocking, the possibility of improper permit increases. (Note: It is recognized that unless there is full adoption of SAV in the customer cone (CC) of the interface in consideration, improper permit is not fully preventable in scenarios where source address spoofing occurs from within the CC, i.e., a prefix at one Autonomous System (AS) in the CC is spoofed from another AS in the same CC.)
+* Improper permit: With some existing uRPF-based SAV mechanisms, improper permit (false negatives) can happen on any type of interface (customer, lateral peer, or provider). Specifically, if the method relaxes the directionality constraint {{RFC3704}} {{RFC8704}} to try to achieve zero improper blocking, the possibility of improper permit increases. (Note: It is recognized that unless there is full adoption of SAV in the customer cone (CC) of the interface in consideration, improper permit is not fully preventable in scenarios where source address spoofing occurs from within the CC, i.e., a prefix at one Autonomous System (AS) in the CC is spoofed from another AS in the same CC.)
 
-* High operational overhead (HOO): ACL-based ingress SAV filtering introduces significant operational overhead, as it needs to update ACL rules manually to adapt to prefix or routing changes in a timely manner. The HOO issue does not pertain to existing uRPF-based mechanisms.
+* High operational overhead: ACL-based ingress SAV filtering introduces significant operational overhead, as it needs to update ACL rules manually to adapt to prefix or routing changes in a timely manner. The high operational overhead issue does not pertain to existing uRPF-based mechanisms.
 
 To address these problems, this document specifies ({{req}}) the following key technical requirements for any new solution:
 
-* Improved SAV accuracy over existing mechanisms: Any new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms.
+* Improved SAV accuracy over existing mechanisms: Any new inter-domain SAV mechanism MUST NOT be worse than existing inter-domain SAV mechanisms in terms of improper block and improper permit. It SHOULD avoid improper blocking and improve the directionality of filtering (i.e., rejecting spoofed traffic).
 
-* Reduced operational overhead: Any new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such mechanism MUST have less operational overhead than ACL-based ingress SAV filtering.
+* Reduced operational overhead: Any new inter-domain SAV mechanism SHOULD be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such solution MUST have less operational overhead than ACL-based ingress SAV filtering.
 
-* Benefit in incremental/partial deployment: Any new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) object registrations). It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
+* Benefit in incremental/partial deployment: Any new solution MUST NOT assume pervasive adoption of the SAV method, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}). It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 
-* Automatic updates to the SAV list and efficient convergence: Any new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}). It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
+* Automatic updates to the SAV list and efficient convergence: Any new inter-domain SAV mechanism SHOULD be responsive to changes in the SAV-related information or the SAV-specific information. It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
 
-* Providing necessary security guarantee: If any proposed new SAV method requires exchanging SAV-related or SAV-specific information between ASes, security mechanisms SHOULD exist to assure trustworthiness of the information.
+* Providing necessary security guarantee: If any proposed new SAV method requires exchanging SAV-specific information between ASes, security mechanisms must exist to prevent malicious injection or alteration of the SAV-specific information.
+
+In addition, any new inter-domain SAV mechanisms should avoid packet modification in the data plane. 
+Note that this document focuses on inter-domain SAV mechanisms that validate and filter packets without modifying data plane packets. This scope limitation is intentional, since allowing packet modification would introduce additional design, forwarding, interoperability, and deployment considerations beyond the problem space studied in this document. Therefore, packet-modifying approaches are outside the scope of this document.
 
 ## Requirements Language
 
@@ -152,16 +161,16 @@ Improper Permit:
 : The validation results in packets with spoofed source addresses being permitted improperly due to an inaccurate SAV list.
 
 Customer Cone:
-: The Customer Cone (CC) of a given AS, denoted as AS-A, includes: (1) AS-A itself, (2) AS-A's direct customers (ASes), (3) The customers of AS-A's direct customers (indirect customers), (4) And so on, recursively, following all chains of provider-to-customer (P2C) links down the hierarchy.
+: The Customer Cone of a given AS, denoted as AS-A, includes: (1) AS-A itself, (2) AS-A's direct customers (ASes), (3) The customers of AS-A's direct customers (indirect customers), (4) And so on, recursively, following all chains of provider-to-customer (P2C) links down the hierarchy.
 
-Customer Cone Prefixes (CC Prefixes):
-: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more Autonomous Systems (ASes) within the CC.
+Customer Cone Prefixes:
+: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more ASes within the CC.
 
 SAV-related Information:
-: Objects registered using Resource Public Key Infrastructure (RPKI). This can include existing RPKI object types (e.g., ROAs and ASPAs) or any new type(s) that may be proposed. 
+: Routing information (e.g., RIB and FIB) and objects published in the Resource Public Key Infrastructure (RPKI) that were originally proposed for non-SAV purposes but may also be used for SAV. The RPKI objects include existing RPKI object types (e.g., ROAs and ASPAs) as well as any new types that may be proposed.
 
 SAV-specific Information:
-: Information dedicated to SAV, which may be defined and exchanged between ASes using a potentially new inter-AS communication protocol. The information may also be in the form of new RPKI object type(s) meant to assist SAV.
+: Information dedicated to SAV, which may be defined and exchanged between ASes using a potentially new inter-AS communication protocol or an extension of an existing protocol. The information may also take the form of new RPKI object type(s) or management information from operators.
 
 # Existing Inter-domain SAV Mechanisms {#SAV_methods}
 
@@ -189,9 +198,9 @@ Inter-domain SAV is essential for preventing source address spoofing traffic at 
 
 ## SAV at Customer Interfaces {#sav_at_cust}
 
-To prevent source address spoofing on customer interfaces, operators can enable ACL-based ingress filtering, or uRPF-based mechanisms such as Strict uRPF, FP-uRPF, or EFP-uRPF. However, the ACL method typically has high operational overhead. The uRPF-based mechanisms may cause improper block in two inter-domain scenarios: Limited Propagation of a Prefix (LPP) and Hidden Prefix (HP). They may also cause improper permit in the scenarios of source address Spoofing within a Customer Cone (SCC). The LPP scenario occurs when an AS applies traffic engineering (TE) using a no-export policy. One example is when an AS attaches NO_EXPORT BGP Community to some prefixes (routes) forwarded to some upstream providers (in multi-homing scenarios) (see {{noexp}}). Sometimes this type of TE is done without attaching the NO_EXPORT, i.e., by selectively propagating different sets of prefixes to different upstream providers. The Hidden Prefix (HP) scenario is typically associated with the Direct Server Return (DSR) scenario; anycast prefix in a Content Delivery Network (CDN) application is not announced by the AS where the DSR (edge server) is located (see {{dsrp}}). Source address Spoofing within a Customer Cone (SCC) scenario arises when a prefix at one Autonomous System (AS) in the CC is spoofed from another AS in the same CC {{spoofing_within_cc}}. It is recognized that unless there is full adoption of SAV in the customer cone (CC) of the interface in consideration, improper permit is not fully preventable in the SCC scenario.
+To prevent source address spoofing on customer interfaces, operators can enable ACL-based ingress filtering, or uRPF-based mechanisms such as Strict uRPF, FP-uRPF, or EFP-uRPF. However, the ACL method typically has high operational overhead. The uRPF-based mechanisms may cause improper block in two inter-domain scenarios: Limited Propagation of a Prefix and Hidden Prefix. They may also cause improper permit in the scenarios of source address Spoofing within a CC. The Limited Propagation of a Prefix scenario occurs when an AS applies traffic engineering (TE) using a no-export policy. One example is when an AS attaches NO_EXPORT BGP Community to some prefixes (routes) forwarded to some upstream providers (in multi-homing scenarios) (see {{noexp}}). Sometimes this scenario occurs by selectively propagating different sets of prefixes to different upstream providers. The Hidden Prefix scenario is typically associated with the Direct Server Return (DSR) scenario; anycast prefix in a Content Delivery Network (CDN) application is not announced by the AS where the DSR (edge server) is located (see {{dsrp}}). Source address Spoofing within a CC scenario arises when a prefix at one AS in the CC is spoofed from another AS in the same CC {{spoofing_within_cc}}. It is recognized that unless there is full adoption of SAV in the CC of the interface in consideration, improper permit is not fully preventable in the Source address Spoofing within a CC scenario.
 
-{{customer_gap}} provides an overview of the gaps associated with the ACL method, Strict uRPF, FP-uRPF, and EFP-uRPF for SAV at customer interfaces in the LPP, HP, and SCC scenarios mentioned above. Illustrations and analyses of these gaps are provided in {{noexp}}, {{dsrp}}, and {{spoofing_within_cc}}, respectively.    
+{{customer_gap}} provides an overview of the gaps associated with the ACL method, Strict uRPF, FP-uRPF, and EFP-uRPF for SAV at customer interfaces in the Limited Propagation of a Prefix, Hidden Prefix, and Source address Spoofing within a CC scenarios mentioned above. Illustrations and analyses of these gaps are provided in {{noexp}}, {{dsrp}}, and {{spoofing_within_cc}}, respectively.    
 
 ~~~~~~~~~~
 +--------------------+------------+-----------+-------+--------+
@@ -202,7 +211,7 @@ To prevent source address spoofing on customer interfaces, operators can enable 
 |          |   HP    |    High    |         possible           |
 +----------+---------+Operational-+-------------------+--------+
 |          |         |  Overhead  |                   |Improper|
-|Spoofed   |  no SCC |    (HOO)   |                   |Permit  |
+|Spoofed   |  no SCC |            |                   |Permit  |
 |Traffic   |         |            |   Functions as    |only for|
 |          |         |            |      Expected     |EFP-uRPF|
 |          |         |            |                   |Alg-B   |
@@ -220,9 +229,9 @@ It also connotes low operational overhead.
 ~~~~~~~~~~
 {: #customer_gap title="The gaps of ACL-based ingress filtering, Strict uRPF, FP-uRPF, and EFP-uRPF for customer interfaces for the scenarios of interest."}
 
-### Limited Propagation of a Prefix (LPP) Scenario {#noexp}
+### Limited Propagation of a Prefix Scenario {#noexp}
 
-In inter-domain networks, some prefixes may not propagate from a customer to all its providers and/or may not propagate transitively from the providers to all their providers due to various factors, such as the use of NO_EXPORT or NO_ADVERTISE Communities, or some other selective-export policies meant for traffic engineering. In these cases, it is possible that a prefix (route) announcement in the CC associated with a customer interface has limited propagation in the CC and is not received on that interface. Then the prefix is invisible in BGP at that interface but the traffic with source address in that prefix may still be received on that interface. This can give rise to improper block when performing SAV with existing mechanisms. These mechanisms include EFP-uRPF Alg-A, which is the focus on in the following analysis, while it also applies to Strict uRPF and FP-uRPF. All these mechanisms suffer from the same problem of improper block in this scenario.
+In inter-domain networks, some prefixes may not propagate from a customer to all its providers and/or may not propagate transitively from the providers to all their providers due to various factors, such as the use of NO_EXPORT or NO_ADVERTISE Communities, or some other selective-export policies. In these cases, it is possible that a prefix (route) announcement in the CC associated with a customer interface has limited propagation in the CC and is not received on that interface. Then the prefix is invisible in BGP at that interface but the traffic with source address in that prefix may still be received on that interface. This can give rise to improper block when performing SAV with existing mechanisms. These mechanisms include EFP-uRPF Alg-A, which is the focus on in the following analysis, while it also applies to Strict uRPF and FP-uRPF. All these mechanisms suffer from the same problem of improper block in this scenario.
 
 ~~~~~~~~~~
                           +----------------+
@@ -256,26 +265,26 @@ In inter-domain networks, some prefixes may not propagate from a customer to all
 
  If AS 4 deploys EFP-uRPF Alg-A at customer interfaces, it will require packets with source addresses in P1 or P6 to only arrive on the interface with AS 1. When AS 1 sends legitimate packets with source addresses in P1 or P6 to AS 4 via AS 2, AS 4 improperly blocks these packets. The same improper block problem occurs with the use of Strict uRPF or FP-uRPF. EFP-uRPF with Alg-B can avoid the improper block in this specific scenario, but even this SAV method would have the improper block if the TE at AS 1 is such that none of the customer interfaces at AS 4 receives a route for P1 (or P6).    
 
-### Hidden Prefix (HP) Scenario {#dsrp}
+### Hidden Prefix Scenario {#dsrp}
 
 CDNs use the concepts of anycast {{RFC4786}}{{RFC7094}} and DSR to improve the quality of service by placing edge servers with content closer to users. An anycast IP address is assigned to devices in different locations, and incoming requests are routed to the closest edge server (DSR) location. Usually, only locations with rich connectivity announce the anycast IP address through BGP. The CDN server receives requests from users and creates tunnels to the edge locations, from where content is sent directly to users. DSR requires servers in the edge locations to use the anycast IP address as the source address in response packets. However, the ASes serving the edge servers do not announce the anycast prefixes through BGP, so the anycast prefix is hidden (invisible in BGP) on the customer interface side at intermediate ASes which &mdash; with existing inter-domain SAV mechanisms &mdash; would improperly block the response packets.
 
-{{dsr}} illustrates a DSR scenario where the anycast IP prefix P3 is advertised by AS 3 through BGP. In this example, AS 3 is the provider of AS 4 and AS 5; AS 4 is the provider of AS 1, AS 2, and AS 5; and AS 2 is the provider of AS 1. AS 2 and AS 4 have deployed inter-domain SAV. When a user at AS 2 sends a request to the anycast destination IP, the forwarding path is AS 2->AS 4->AS 3. The anycast server in AS 3 receives the request and tunnels it to the edge servers in AS 1. Finally, the edge server sends the content packets to the user with source addresses in prefix P3. Let us say, the forwarding path for the content packets is AS 1-> AS 4->AS 2. Since AS 4 does not receive routing information for prefix P3 from AS 1, EFP-uRPF Alg-A or EFP-uRPF Alg-B (or any other existing uRPF-based mechanism) at the customer interface of AS 4 facing AS 1 will improperly block the response packets from AS 1.
+{{dsr}} illustrates a DSR scenario where the anycast IP prefix P7 is advertised by AS 3 through BGP. In this example, AS 3 is the provider of AS 4 and AS 5; AS 4 is the provider of AS 1, AS 2, and AS 5; and AS 2 is the provider of AS 1. AS 2 and AS 4 have deployed inter-domain SAV. When a user at AS 2 sends a request to the anycast destination IP, the forwarding path is AS 2->AS 4->AS 3. The anycast server in AS 3 receives the request and tunnels it to the edge servers in AS 1. Finally, the edge server sends the content packets to the user with source addresses in prefix P3. Let us say, the forwarding path for the content packets is AS 1->AS 2. Since AS 2 does not receive routing information for prefix P3 from AS 1, EFP-uRPF Alg-A or EFP-uRPF Alg-B (or any other existing uRPF-based mechanism) at the customer interface of AS 2 facing AS 1 will improperly block the response packets from AS 1.
 
 ~~~~~~~~~~
                                 +----------------+
-                Anycast Server+-+    AS 3(P3)    |
+                Anycast Server+-+  AS 3(P3, P7)  |
                                 +-+/\----+/\+----+
                                    /       \
-                         P3[AS 3] /         \ 
-                                 /           \
+                         P3[AS 3] /         \ P3[AS 3]
+                        P7[AS 3] /           \ P7[AS 3]
                                 / (C2P)       \
                        +----------------+      \
                        |    AS 4(P4)    |       \
                        ++/\+--+/\+--+/\++        \
-          P6[AS 2, AS 1] /     |      \           \
-         P1[AS 2, AS 1] /      |       \           \
-              P2[AS 2] /       |        \           \
+                         /     |      \           \
+         P3[AS 4, AS 3] /      |       \           \
+        P7[AS 4, AS 3] /       |        \           \
                       / (C2P)  |         \ P5[AS 5]  \ P5[AS 5]
       +----------------+       |          \           \    
 User+-+    AS 2(P2)    |       | P1[AS 1]  \           \
@@ -287,17 +296,21 @@ User+-+    AS 2(P2)    |       | P1[AS 1]  \           \
                     +---------------+         +----------------+
        Edge Server+-+  AS 1(P1, P6)  |        |    AS 5(P5)    |
                     +----------------+        +----------------+
-P3 is the anycast prefix and is only advertised by AS 3 through BGP.
+P7 is the anycast prefix and is advertised only by AS 3 via BGP.
+Note that, unlike the other AS network figures in this document,
+this figure illustrates that AS 3 advertises prefixes P3 and P7 
+to AS 2 through AS 4, and does not depict the propagation of 
+prefixes P1 and P6 beyond AS 2.
 ~~~~~~~~~~
 {: #dsr title="A Direct Server Return (DSR) scenario."}
 
 Further, there are cases of specific prefixes that may be exclusively used as source addresses (legitimately) without being advertised via BGP by any AS. While different from DSR scenarios, these cases similarly result in existing inter-domain SAV mechanisms improperly blocking legitimate traffic originating from such prefixes.
 
-### Source Address Spoofing within a Customer Cone (SCC) Scenario {#spoofing_within_cc}
+### Source Address Spoofing within a Customer Cone Scenario {#spoofing_within_cc}
 
-In general, improper permit of spoofed packets in SCC scenarios is unavoidable for various uRPF-based methods in partial deployment. For example, consider a topology in which AS 1 and AS 2 are customers of AS 3; and AS 3 is a customer of AS 4. AS 1 and AS 2 originate prefixes P1 and P2, respectively. AS 4 performs SAV on its customer interface with AS 3. P1 and P2 are announced from AS 3 to AS 4 and they would be included in the SAV list (allowlist) of AS 4 with any SAV mechanism. Assume AS 3 doesn't do SAV. Now as an example of SCC, if AS 2 spoofs AS 1's prefix P1 and sends the spoofed packets to AS 4 (via AS 3), there is no way for AS 4 to detect the spoofed traffic. AS 4's SAV cannot differentiate between the spoofed and the legitimate packets that have source address in P1. In an SCC scenario of this nature, the only recourse for blocking the spoofed traffic is for AS 3 also to be upgraded to do SAV, i.e., deployment of SAV closer to the source of spoofing.           
+In general, improper permit of spoofed packets in Source Address Spoofing within a CC scenarios is unavoidable for various uRPF-based methods in partial deployment. For example, consider a topology in which AS 1 and AS 2 are customers of AS 3; and AS 3 is a customer of AS 4. AS 1 and AS 2 originate prefixes P1 and P2, respectively. AS 4 performs SAV on its customer interface with AS 3. P1 and P2 are announced from AS 3 to AS 4 and they would be included in the SAV list (allowlist) of AS 4 with any SAV mechanism. Assume AS 3 doesn't do SAV. Now as an example of Source Address Spoofing within a CC, if AS 2 spoofs AS 1's prefix P1 and sends the spoofed packets to AS 4 (via AS 3), there is no way for AS 4 to detect the spoofed traffic. AS 4's SAV cannot differentiate between the spoofed and the legitimate packets that have source address in P1. In an Source Address Spoofing within a CC scenario of this nature, the only recourse for blocking the spoofed traffic is for AS 3 also to be upgraded to do SAV, i.e., deployment of SAV closer to the source of spoofing.           
 
-Another scenario is highlighted in {{customer-spoofing}} while using EFP-uRPF Alg-B method on customer interfaces. This scenario is non-SCC from the perspective of each individual customer interfaces of AS 4, but it is SCC from the perspective of AS 4 as a whole. EFP-uRPF Alg-B relaxes directionality to reduce (or eliminate) false positives and that makes it more susceptible to SCC (per the latter perspective). This is expected because EFP-uRPF Alg-B somewhat conservatively applies the same relaxed SAV list across all customer interfaces.
+Another scenario is highlighted in {{customer-spoofing}} while using EFP-uRPF Alg-B method on customer interfaces. This scenario is not Source Address Spoofing within a CC from the perspective of each individual customer interfaces of AS 4, but it is Source Address Spoofing within a CC from the perspective of AS 4 as a whole. EFP-uRPF Alg-B relaxes directionality to reduce (or eliminate) false positives and that makes it more susceptible to Source Address Spoofing within a CC (per the latter perspective). This is expected because EFP-uRPF Alg-B somewhat conservatively applies the same relaxed SAV list across all customer interfaces.
 
 ~~~~~~~~~~
                                        +----------------+
@@ -329,7 +342,7 @@ AS 2 or connected to AS 2 through other ASes.
 ~~~~~~~~~~
 {: #customer-spoofing title="A scenario of source address spoofing within a customer cone."}
 
-In {{customer-spoofing}}, the source address spoofing takes place within AS 4's customer cone, where the spoofer, which is inside of AS 2 or connected to AS 2 through other ASes, sends spoofing traffic with spoofed source addresses in P5 to AS 3 along the path AS 2->AS 4-> AS 3. The arrows in {{customer-spoofing}} illustrate the commercial relationships between ASes. AS 3 serves as the provider for AS 4 and AS 5, while AS 4 acts as the provider for AS 1, AS 2, and AS 5. Additionally, AS 2 is the provider for AS 1. Suppose AS 1 and AS 4 have deployed inter-domain SAV, while the other ASes have not.
+In {{customer-spoofing}}, the source address spoofing takes place within AS 4's CC, where the spoofer, which is inside of AS 2 or connected to AS 2 through other ASes, sends spoofing traffic with spoofed source addresses in P5 to AS 3 along the path AS 2->AS 4-> AS 3. The arrows in {{customer-spoofing}} illustrate the commercial relationships between ASes. AS 3 serves as the provider for AS 4 and AS 5, while AS 4 acts as the provider for AS 1, AS 2, and AS 5. Additionally, AS 2 is the provider for AS 1. Suppose AS 1 and AS 4 have deployed inter-domain SAV, while the other ASes have not.
 
 If AS 4 deploys EFP-uRPF Alg-B at its customer interfaces, it will allow packets with source addresses in P5 to originate from AS 1, AS 2, and AS 5. Consequently, AS 4 will improperly permit the spoofed packets from AS 2, enabling them to propagate further.
 
@@ -339,7 +352,7 @@ In the scenario of {{customer-spoofing}}, Strict uRPF, FP-uRPF, and EFP-uRPF Alg
 ## SAV at Peer Interfaces {#sav_at_peer}
 
 SAV is used at peer interfaces for validating the traffic entering the validating AS and destined for the AS's customer cone.
-The data packets received from a customer or lateral peer AS must have source addresses belonging only to the prefixes in the customer cone (CC) of that AS. 
+The data packets received from a customer or lateral peer AS must have source addresses belonging only to the prefixes in the CC of that AS. 
 In both cases, the focus is on discovering all prefixes in the CC of the neighbor AS.
 So, in principle, the SAV techniques suitable on a customer interface may also be used on a peer interface, especially EFP-uRPF Alg-A or Alg-B, which are more accommodative of asymmetric routing.
 Indeed, asymmetric routing is thought to be prevalent for peer interfaces.
@@ -351,7 +364,7 @@ In that case, the gap analysis of {{sav_at_prov}} would also be applicable to th
 
 SAV is used at provider interfaces for validating the traffic entering the AS and destined for the AS's customer cone. {{provider_peer_gap}} summarizes the gaps of ACL-based ingress filtering and Loose uRPF for SAV at provider interfaces in the scenarios of interest. ACL-based ingress filtering may effectively block spoofing traffic from provider AS, while appropriately allowing legitimate traffic, but it has high operational overhead. On the other hand, Loose uRPF correctly permits legitimate traffic, but it can also mistakenly allow spoofing traffic to pass through. 
 
-In {{provider_peer_gap}}, Spoofed from Provider Tree (SPT) is a scenario where the spoofed traffic comes from the provider tree, i.e., the providers in the transitive hierarchy above the validating AS. The spoofed prefix may belong to (originated by) any AS in the Internet other than the spoofing AS; it may even belong to an AS in the customer cone of the validating AS (example below).
+In {{provider_peer_gap}}, Spoofing from Providers refers to a scenario in which spoofed traffic comes from provider ASes, either because they generate the spoofed traffic themselves or because they relay spoofed traffic originating from their customers' or peers' respective CCs. The spoofed prefix may belong to (originated by) any AS in the Internet other than the spoofing AS; it may even belong to an AS in the customer cone of the validating AS (example below).
 
 ~~~~~~~~~~
 +------------------------+------------+---------------+
@@ -360,10 +373,9 @@ In {{provider_peer_gap}}, Spoofed from Provider Tree (SPT) is a scenario where t
 |Legitimate|             |            |  Functions    |
 |Traffic   |     --      |    High    |  as Expected  |
 +----------+-------------+Operational +---------------+
-|Spoofed   |   Spoofed   |  Overhead  |               |
+|Spoofed   |   Spoofing  |  Overhead  |               |
 |Traffic   |     from    |   (HOO)    |Improper Permit|
-|          |   Provider  |            |               |
-|          |  Tree (SPT) |            |               |
+|          |   Providers |            |               |
 +----------+-------------+------------+---------------+
 
 'Functions as Expected' connotes the absence of improper block.
@@ -371,7 +383,7 @@ It also connotes low operational overhead.
 ~~~~~~~~~~
 {: #provider_peer_gap title="The gaps of ACL-based ingress filtering and Loose uRPF at provider interfaces in the scenarios of interest."}
 
-{{provider-spoofing}} illustrates a scenario of SPT and is used to analyze the gaps of ACL-based ingress filtering and Loose uRPF.
+{{provider-spoofing}} illustrates a scenario of Spoofing from Providers and is used to analyze the gaps of ACL-based ingress filtering and Loose uRPF.
 
 ~~~~~~~~~~
                           +----------------+
@@ -405,7 +417,7 @@ AS 3 or connected to AS 3 through other ASes.
 
 In {{provider-spoofing}}, the spoofer which is inside of AS 3 or connected to AS 3 through other ASes forges the source addresses in P1 and sends the spoofing traffic to the destination addresses in P2 at AS 2. AS 1 is a customer of AS 2; AS 1 and AS 2 are customers of AS 4; AS 4 is a customer of AS 3; and AS 5 is a customer of both AS 3 and AS 4. Suppose AS 4 and AS 1 have deployed inter-domain SAV, while the other ASes have not.
 
-Using the ACL method in the form of a disallow (deny) list at the provider interface of AS 4 (facing AS 3) incurs a very high operational overhead. As mentioned before ({{SAV_methods}}), it is impractical to store and maintain a very large and dynamically varying set of unallocated IPv6 prefixes in the ACL.
+Using the ACL method in the form of a disallow (deny) list at the provider interface of AS 4 (facing AS 3) incurs a very high operational overhead, as mentioned in {{SAV_methods}}.
 
 Applying Loose uRPF at the provider interface of AS 4 (facing AS 3) can greatly reduce the operational overhead because it uses the FIB as the information source for allowed prefixes, and can adapt to changes in the network to prevent false positives (improper blocking). 
 However, using Loose uRPF at AS 4 will naturally permit packets with source addresses in P1 (since P1 is present in the FIB) and hence will not prevent the improper permit of the spoofed packets from AS 3 {{provider-spoofing}}.
@@ -427,9 +439,9 @@ This is an expected limitation of Loose uRPF.
 |        |diligence)|           |          |                |
 +--------+----------+-----------+----------+-------+--------+
 |Improper|  YES/NO  |NO (no SCC)|   YES    |   NO (no SCC)  |
-|Permit  |(manual   |YES (SCC)  |  (SPT)   |   YES (SCC)    |
-|        |operator  |           |          |                |
-|        |diligence)|           |          |                |
+|Permit  |(manual   |YES (SCC)  |(Spoofing |   YES (SCC)    |
+|        |operator  |           |  from    |                |
+|        |diligence)|           |Providers)|                |
 +--------+----------+-----------+----------+-------+--------+
 |        |   YES    |                                       |
 |  HOO   |  (Any    |                  NO                   |
@@ -441,7 +453,6 @@ HOO = High Operational Overhead
 LPP = Limited Propagation of a Prefix
 HP = Hidden Prefix
 SCC = Spoofing within a CC  
-SPT = Spoofing from Provider Tree
 ** Typically, an HP (like DSR prefixes) is hidden on the CIs
    but received on a provider or peer interface; 
    hence included in the FIB and that helps avoid
@@ -451,13 +462,13 @@ SPT = Spoofing from Provider Tree
 
 The problem statement that results from the gap analysis can be expressed as follows. New proposals for SAV should aim to fill in the following problem areas (gaps) found in the currently standardized SAV methods (found in IETF RFCs): 
 
-* Improper block: Existing uRPF-based mechanisms suffer from improper block (false positives) in two inter-domain scenarios: limited propagation of a prefix (e.g., NO_EXPORT and some other traffic engineering (TE) scenarios) and hidden prefix (e.g., CDN/DSR scenario).
+* Improper block: Existing uRPF-based mechanisms suffer from improper block (false positives) in two inter-domain scenarios: Limited Propagation of a Prefix (e.g., NO_EXPORT and some other selective-export scenarios) and Hidden Prefix (e.g., CDN/DSR scenario).
 
-* Improper permit: With some existing uRPF-based SAV mechanisms, improper permit (false negatives) can happen on any type of interface (customer, lateral peer, or provider). Specifically, if the method relaxes the directionality constraint {{RFC3704}} {{RFC8704}}} to try to achieve zero improper blocking, the possibility of improper permit increases. (Note: It is recognized that unless there is full adoption of SAV in the customer cone (CC) of the interface in consideration, improper permit is not fully preventable in scenarios where source address spoofing occurs from within the CC, i.e., a prefix at one Autonomous System (AS) in the CC is spoofed from another AS in the same CC.)
+* Improper permit: With some existing uRPF-based SAV mechanisms, improper permit (false negatives) can happen on any type of interface (customer, lateral peer, or provider). Specifically, if the method relaxes the directionality constraint {{RFC3704}} {{RFC8704}}} to try to achieve zero improper blocking, the possibility of improper permit increases. (Note: It is recognized that unless there is full adoption of SAV in the CC of the interface in consideration, improper permit is not fully preventable in scenarios where source address spoofing occurs from within the CC, i.e., a prefix at one AS in the CC is spoofed from another AS in the same CC.)
 
-* High operational overhead (HOO): ACL-based ingress SAV filtering introduces significant operational overhead, as it needs to update ACL rules manually to adapt to prefix or routing changes in a timely manner. The HOO issue does not pertain to existing uRPF-based mechanisms.  
+* High operational overhead: ACL-based ingress SAV filtering introduces significant operational overhead, as it needs to update ACL rules manually to adapt to prefix or routing changes in a timely manner. The high operational overhead issue does not pertain to existing uRPF-based mechanisms.  
 
-The limitations of existing uRPF-based mechanisms are due to their exclusive reliance on BGP data. Although the algorithms themselves have evolved (e.g., [RFC8704]), the underlying input has remained unchanged, inherently constraining their accuracy in scenarios such as LPP and HP. With the availability of authoritative SAV-related information, plus the potential SAV-specific information ({{gap}}), it would be possible to develop comprehensive new SAV algorithms or mechanisms to overcome the existing gaps.
+The limitations of existing uRPF-based mechanisms are due to their exclusive reliance on BGP data. Although the algorithms themselves have evolved (e.g., [RFC8704]), the underlying input has remained unchanged, inherently constraining their accuracy in scenarios such as LPP and HP. With the availability of authoritative SAV-related information, plus the potential SAV-specific information ({{terminology}}), it would be possible to develop comprehensive new SAV algorithms or mechanisms to overcome the existing gaps.
 
 # Requirements for New Inter-domain SAV Mechanisms {#req}
 
@@ -465,25 +476,24 @@ This section lists the requirements for any new inter-domain SAV mechanisms whic
 
 ## Accurate Validation
 
-Any new inter-domain SAV mechanism MUST avoid improper blocking and have superior directionality property (reject more spoofed traffic) than existing inter-domain SAV mechanisms. The requirement applies for all directions of AS peering (customer, provider, and peer).
+Any new inter-domain SAV mechanism MUST NOT be worse than existing inter-domain SAV mechanisms in terms of improper block and improper permit. It SHOULD avoid improper blocking and improve the directionality of filtering (i.e., rejecting spoofed traffic).
+The requirement applies for all directions of AS peering (customer, provider, and peer).
 
 ## Reducing Operational Overhead
 
-Any new inter-domain SAV mechanism MUST be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such solution MUST have less operational overhead than ACL-based ingress SAV filtering.
+Any new inter-domain SAV mechanism SHOULD be able to automatically adapt to network dynamics and asymmetric routing scenarios. Any such solution MUST have less operational overhead than ACL-based ingress SAV filtering.
 
 ## Early Adopters Benefit in Incremental/Partial Deployment
 
-Any new solution SHOULD NOT assume pervasive adoption of the SAV method or the SAV-related information (e.g., Resource Public Key Infrastructure (RPKI) objects such as ROAs and ASPAs). 
-It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
+Any new solution MUST NOT assume pervasive adoption of the SAV method, the SAV-related information, or the SAV-specific information. It SHOULD benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 
 ## Providing Necessary Security Guarantee
 
-SAV-related information, such as RPKI objects, may be used for designing a more accurate SAV. Such information must be protected at their repositories and during communication to the relying parties (the BGP security community is already diligent about this). If any proposed SAV method requires exchanging SAV-specific information between ASes, security mechanisms must exist to assure trustworthiness of the information. The idea is to prevent malicious injection or alteration of the SAV-specific information.
+SAV-related information, e.g., routing information and RPKI objects, may be used to design more accurate SAV mechanisms. Such information must be protected during both its creation and dissemination (the BGP security community is already diligent about this). If any proposed new SAV method requires exchanging SAV-specific information between ASes, security mechanisms must exist to prevent malicious injection or alteration of the SAV-specific information.
 
 ## Automatic Updates to the SAV List and Efficient Convergence
 
-Any new inter-domain SAV mechanism SHOULD be responsive to changes in the BGP (FIB/RIB) data, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}).
-It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
+Any new inter-domain SAV mechanism SHOULD be responsive to changes in the SAV-related information or the SAV-specific information. It SHOULD automatically update the SAV list while achieving efficient re-convergence of the same.
 In this context, convergence refers to the stabilization of the SAV lists on the AS-to-AS interfaces performing SAV.
 It is essential that any new SAV mechanism converges to the correct updated SAV list in a proper manner, minimizing both improper block and improper permit during the process.
 
@@ -499,11 +509,11 @@ The scope does not include:
 
 * Non-IP packets: This includes MPLS label-based forwarding and other non-IP-based forwarding.
 
-In addition, any new inter-domain SAV mechanisms MUST NOT modify the data plane packets. Existing architectures or protocols or mechanisms can be inherited by any such mechanism to achieve better SAV effectiveness.
+In addition, any new inter-domain SAV mechanisms should avoid packet modification in the data plane. Existing architectures or protocols or mechanisms can be inherited by any such mechanism to achieve better SAV effectiveness.
 
 # Security Considerations {#Security}
 
-The SAV list will be generated based on routing information from BGP (FIB/RIB), SAV-related information, and/or SAV-specific information. If the information is poisoned by attackers, the SAV list will be inaccurate. Legitimate packets may be dropped improperly or malicious traffic with spoofed source addresses may be permitted improperly. BGP routing security using available methods for the prevention, detection, and mitigation of route hijacks, route leaks, and AS_PATH manipulations should be deployed which leads to greater accuracy of the BGP (FIB/RIB) information used for computing SAV lists.
+The SAV list will be generated based on SAV-related information and/or SAV-specific information. If the information is poisoned by attackers, the SAV list will be inaccurate. Legitimate packets may be dropped improperly or malicious traffic with spoofed source addresses may be permitted improperly. BGP routing security using available methods for the prevention, detection, and mitigation of route hijacks, route leaks, and AS_PATH manipulations should be deployed which leads to greater accuracy of the routing information (e.g., RIB and FIB) in the SAV-related information used for computing SAV lists.
 
 # IANA Considerations {#IANA}
 
