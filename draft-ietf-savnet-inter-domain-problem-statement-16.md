@@ -360,7 +360,7 @@ In both cases, the focus is on discovering all prefixes in the CC of the neighbo
 So, in principle, the SAV techniques suitable on customer interfaces may also be used on peer interfaces, especially EFP-uRPF Alg-A or Alg-B, which are more accommodative of asymmetric routing.
 Indeed, asymmetric routing is thought to be prevalent for peer interfaces.
 If SAV techniques suitable for customer interfaces are considered for peer interfaces, then the gap analysis of {{sav_at_cust}} would also be applicable to the SAV for the peer interfaces.
-However, due to increased concern about asymmetric routing, network operators may conservatively use the same relaxed SAV techniques for peer interfaces as those for provider interfaces, e.g., Loose uRPF {{sav_at_prov}}.
+However, due to increased concern about asymmetric routing, network operators may conservatively use the same relaxed SAV techniques for peer interfaces as those for provider interfaces, e.g., Loose uRPF ({{sav_at_prov}}).
 In that case, the gap analysis of {{sav_at_prov}} would also be applicable to the SAV for peer interfaces.         
 
 ## SAV at Provider Interfaces {#sav_at_prov} 
