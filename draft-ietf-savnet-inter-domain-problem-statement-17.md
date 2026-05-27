@@ -135,13 +135,13 @@ To address these problems, this document specifies ({{req}}) the following key t
 
 * Improved SAV accuracy over existing mechanisms: Any new inter-domain SAV mechanism must provide improved SAV accuracy in terms of improper block and improper permit over existing mechanisms. It must seek to achieve zero improper blocking (i.e., avoid false positives) in certain scenarios of interest ({{gap}}). Further, it must improve the directionality of filtering (i.e., achieve greater rejection of spoofed traffic) over existing mechanisms.
 
-* Reduced operational overhead: Any new inter-domain SAV mechanism should be able to automatically detect changes in the SAV-related information and/or SAV-specific information required for generating the SAV list, obtain the updated information, and use the updated information to generate or update the SAV list.
+* Reduced operational overhead: Any new inter-domain SAV mechanism should be able to automatically detect changes in the SAV-related information ({{terminology}}) and/or SAV-specific information ({{terminology}}) required for generating the SAV list, obtain the updated information, and use the updated information to generate or update the SAV list.
 
-* Benefit in incremental/partial deployment: Any new inter-domain SAV mechanism must not assume pervasive adoption of the SAV method, the SAV-related information ({{terminology}}), or the SAV-specific information ({{terminology}}). It should benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
+* Benefit in incremental/partial deployment: Any new inter-domain SAV mechanism must not assume pervasive adoption of the SAV method, the SAV-related information, or the SAV-specific information. It should benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 
 * Providing necessary security guarantee: If any new inter-domain SAV mechanism introduces or uses SAV-specific information, security mechanisms must exist to prevent malicious injection or alteration of the SAV-specific information.
 
-* Efficient convergence: Any new inter-domain SAV mechanism should be responsive to changes in the SAV-related information or the SAV-specific information. It should also achieve efficient convergence of the SAV list after changes in the SAV-related information or SAV-specific information used by the mechanism.
+* Efficient convergence: Any new inter-domain SAV mechanism should achieve efficient convergence of the SAV list after any relevant changes occur in the SAV-related information or SAV-specific information used by the mechanism.
 
 Note that this document focuses on inter-domain SAV mechanisms that validate and filter packets without modifying data plane packets ({{scope}}). This scope limitation is intentional, since allowing packet modification would introduce additional design, forwarding, interoperability, and deployment considerations beyond the problem space studied in this document. Therefore, SAV mechanisms based on data packet modification are outside the scope of this document.
 
@@ -198,9 +198,9 @@ The inadequacies of inter-domain SAV mechanisms can be characterized along three
 
 ## SAV at Customer Interfaces {#sav_at_cust}
 
-To prevent source address spoofing on customer interfaces, operators can enable ACL-based ingress filtering, or uRPF-based mechanisms such as Strict uRPF, FP-uRPF, or EFP-uRPF. However, the ACL method typically has high operational overhead. The uRPF-based mechanisms may cause improper block in two inter-domain scenarios: Limited Propagation of a Prefix (LPP) and Hidden Prefix (HP). They may also cause improper permit in the scenarios of source address spoofing within a CC. One example of LPP scenarios is when an AS attaches NO_EXPORT BGP Community to some prefixes (routes) forwarded to some upstream providers (in multi-homing scenarios) (see {{noexp}}). Sometimes this scenario occurs by selectively propagating different sets of prefixes to different upstream providers. The Hidden Prefix scenario is typically associated with the Direct Server Return (DSR) scenario; anycast prefix in a Content Delivery Network (CDN) application is not announced by the AS where the DSR (edge server) is located (see {{dsrp}}). Source address spoofing within a CC scenario arises when a prefix at one AS in the CC is spoofed from another AS in the same CC ({{spoofing_within_cc}}). It is recognized that unless there is full adoption of SAV in the CC of the interface in consideration, improper permit is not fully preventable in the Source address spoofing within a CC scenario.
+To prevent source address spoofing on customer interfaces, operators can enable ACL-based ingress filtering, or uRPF-based mechanisms such as Strict uRPF, FP-uRPF, or EFP-uRPF. However, the ACL method typically has high operational overhead. The uRPF-based mechanisms may cause improper block in two inter-domain scenarios: Limited Propagation of a Prefix (LPP) and Hidden Prefix (HP). They may also cause improper permit in the scenarios of source address spoofing within a CC. One example of LPP scenarios is when an AS attaches NO_EXPORT BGP Community to some prefixes (routes) forwarded to some upstream providers (in multi-homing scenarios) (see {{noexp}}). Sometimes this scenario occurs by selectively propagating different sets of prefixes to different upstream providers. The Hidden Prefix scenario is typically associated with the Direct Server Return (DSR) scenario; anycast prefix in a Content Delivery Network (CDN) application is not announced by the AS where the DSR (edge server) is located (see {{dsrp}}). Source address spoofing within a CC scenario arises when a prefix at one AS in the CC is spoofed from another AS in the same CC ({{spoofing_within_cc}}). It is recognized that unless there is full adoption of SAV in the CC of the interface in consideration, improper permit is not fully preventable in the case of source address spoofing within a CC.
 
-{{customer_gap}} provides an overview of the gaps associated with the ACL method, Strict uRPF, FP-uRPF, and EFP-uRPF for SAV at customer interfaces in the Limited Propagation of a Prefix, Hidden Prefix, and Source address spoofing within a CC scenarios mentioned above. Illustrations and analyses of these gaps are provided in {{noexp}}, {{dsrp}}, and {{spoofing_within_cc}}, respectively.    
+{{customer_gap}} provides an overview of the gaps associated with the ACL method, Strict uRPF, FP-uRPF, and EFP-uRPF for SAV at customer interfaces in the Limited Propagation of a Prefix, Hidden Prefix, and source address spoofing within a CC scenarios mentioned above. Illustrations and analyses of these gaps are provided in {{noexp}}, {{dsrp}}, and {{spoofing_within_cc}}, respectively.    
 
 ~~~~~~~~~~
 +--------------------+------------+-----------+-------+--------+
@@ -479,7 +479,7 @@ The requirement applies for all directions of AS peering (customer, provider, an
 
 ## Reducing Operational Overhead
 
-Any new inter-domain SAV mechanism should be able to automatically detect changes in the SAV-related information and/or SAV-specific information required for generating the SAV list, obtain the updated information, and use the updated information to generate the SAV list.
+Any new inter-domain SAV mechanism should be able to automatically detect changes in the SAV-related information ({{terminology}}) and/or SAV-specific information ({{terminology}}) required for generating the SAV list, obtain the updated information, and use the updated information to generate the SAV list.
 
 ## Early Adopters Benefit in Incremental/Partial Deployment
 
@@ -491,7 +491,7 @@ SAV-related information, e.g., routing information and the existing RPKI signed 
 
 ## Efficient Convergence
 
-Any new inter-domain SAV mechanism should be responsive to changes in the SAV-related information or the SAV-specific information. It should also achieve efficient convergence of the SAV list after changes in the SAV-related information or SAV-specific information used by the mechanism.
+Any new inter-domain SAV mechanism should achieve efficient convergence of the SAV list after any relevant changes occur in the SAV-related information or SAV-specific information used by the mechanism.
 In this context, convergence refers to the stabilization of the SAV lists on the AS-to-AS interfaces performing SAV.
 It is essential that any new SAV mechanism converges to the correct updated SAV list in a proper manner, minimizing both improper block and improper permit during the process.
 
