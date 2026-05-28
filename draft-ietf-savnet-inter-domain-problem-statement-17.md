@@ -123,7 +123,7 @@ Access Control List (ACL) and unicast Reverse Path Forwarding (uRPF) based techn
 <!--IETF work-in-progress documents are not considered.-->
 This document analyzes the available methods and attempts to answer: (1) what are the technical gaps ({{gap}}), (2) what are the outstanding problems ({{problem}}), and (3) what are the practical requirements for the solutions to these problems ({{req}}).
 
-The following summarizes the fundamental problems with existing SAV mechanisms, as analyzed in {{gap}} and {{problem}}:
+The following summarizes the fundamental problems with existing SAV mechanisms, as analyzed in {{gap}}:
 
 * Improper block: Existing uRPF-based mechanisms suffer from improper block (false positives) in two inter-domain scenarios: Limited Propagation of a Prefix and Hidden Prefix.
 
