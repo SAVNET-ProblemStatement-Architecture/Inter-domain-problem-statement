@@ -128,7 +128,7 @@ This document analyzes the problem space and provides a gap analysis of existing
 
 Source Address Validation (SAV) is a fundamental mechanism for detecting and mitigating source address spoofing attacks {{RFC2827}} {{RFC5210}} {{RFC3704}} {{RFC8704}}. Inter-domain SAV checks the source addresses of data traffic received from a neighboring AS, whether that traffic originated within the neighbor's network or is being transited through it. Inter-domain SAV is applied at border routers to incoming traffic on external interfaces directly connected to a neighboring AS. The local AS (SAV performing AS) and the neighbor AS are connected using external BGP (eBGP). The neighbor AS could be using either a public ASN or a private ASN.  
 
-This document analyzes the problem space and provides a gap analysis of existing inter-domain source address validation (SAV) mechanisms. Based on these findings, it outlines the technical requirements for future improvements.
+This document analyzes the problem space and provides a gap analysis of existing inter-domain SAV mechanisms. Based on these findings, it outlines the technical requirements for future improvements.
 The corresponding work related to intra-domain SAV is documented in [I-D.ietf-savnet-intra-domain-problem-statement], which includes SAV for hosts and customers (non-AS) connected to the AS {{SAC-004}}.
 
 The eBGP sessions between the border routers of the SAV performing AS and the neighbor ASes may include Customer-to-Provider (C2P), Provider-to-Customer (P2C), lateral peering (P2P), and Route Server (RS) to RS-client connection. The terms customer, provider (transit provider), and lateral peer (non-transit peer; peer (for simplicity)) used in this document are consistent with those defined in {{RFC7908}} {{RFC9234}}. Further, {{RFC9234}} mentions RS and RS-client. An RS-to-RS-client interface is akin to the customer interface. For the purposes of SAV, an RS-client-to-RS interface may be treated (1) like a provider interface for simplicity, or (2) like a union of lateral peers considering all the ASes the RS-client chose to peer with at the IXP RS.
@@ -161,7 +161,7 @@ To address these problems, this document specifies ({{req}}) the following key t
 
 Note that this document focuses on inter-domain SAV mechanisms that validate and filter packets without modifying data plane packets ({{scope}}). This scope limitation is intentional, since allowing packet modification would introduce additional design, forwarding, interoperability, and deployment considerations beyond the problem space studied in this document. Therefore, SAV mechanisms based on data packet modification are outside the scope of this document.
 
-Note: Private AS was mentioned earlier. Private ASes may occur in the context of internal peering. These private AS numbers are not visible externally in eBGP due their removal using features such as remove-private-as {{Cisco}} or remove-private {{Juniper}}.
+Note: Private AS was mentioned earlier. Private ASes may occur in the context of internal peering. These private AS numbers are not visible externally in eBGP due to their removal using features such as remove-private-as {{Cisco}} or remove-private {{Juniper}}.
 
 # Terminology {#terminology}
 
@@ -179,16 +179,16 @@ Customer Cone:
 : The Customer Cone (CC) of a given AS, denoted as AS-A, includes: (1) AS-A itself, (2) AS-A's direct customers (ASes), (3) The customers of AS-A's direct customers (indirect customers), (4) And so on, recursively, following all chains of provider-to-customer (P2C) links down the hierarchy.
 
 Prefixes in the CC:
-: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more ASes within the CC.
-
-Configuration Information: 
-: This is information that an AS configures locally. For example, an AS has provisioned (suballocated) prefixes p1 and p2 for use by a customer network (non-BGP), which happens to also own a prefix p3 directly allocated by an RIR. The customer informs the AS that p1 must be advertised in eBGP on the public Internet, p2 is strictly used internally within the customer network, and p3 must not to be advertised (by this AS) but may be used for sourcing traffic emitted to the Internet. The AS locally configures these prefixes accordingly. This configuration information is used locally for route origination and SAV filtering purposes.    
+: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more ASes within the CC.  
 
 SAV-related Information:
-: Routing information (e.g., RIB and FIB) and objects published in the Resource Public Key Infrastructure (RPKI) that were originally proposed for non-SAV purposes but may also be used for SAV. The RPKI objects include existing RPKI object types (e.g., ROAs and ASPAs) as well as any new types that may be proposed.
+: Routing information (e.g., RIBs and FIBs populated by routing protocols or by the local configuration information provided by the AS operator) and objects published in the Resource Public Key Infrastructure (RPKI) that were originally proposed for non-SAV purposes but may also be used for SAV. The RPKI objects include existing RPKI object types (e.g., ROAs and ASPAs) as well as any new types that may be proposed.
 
 SAV-specific Information:
-: Information dedicated to SAV, which may be defined and exchanged between ASes using potentially new inter-AS communication protocol or an extension of an existing protocol. The information may also take the form of new RPKI object type(s) or management information from operators.
+: Information dedicated to SAV, which may be defined and exchanged between ASes using potentially new inter-AS communication protocol or an extension of an existing protocol. The information may also take the form of new RPKI object type(s). It may also come from the local configuration information provided by the AS operator.
+
+Configuration Information: 
+: This is information that an AS operator configures locally. For example, an AS has provisioned (suballocated) prefixes p1 and p2 for use by a customer network (non-BGP), which happens to also own a prefix p3 directly allocated by an RIR. The customer informs the AS that p1 must be advertised in eBGP on the public Internet, p2 is strictly used internally within the customer network, and p3 must not to be advertised (by this AS) but may be used for sourcing traffic emitted to the Internet. The AS locally configures these prefixes accordingly. The AS uses this configuration information locally for route origination and SAV filtering purposes. The configuration information can be viewed partly as SAV-related information (e.g., prefixes p1, p2) and partly as SAV-specific information (e.g., prefix p3).
 
 Direct Server Return (DSR): 
 : A traffic delivery model commonly used by Content Delivery Networks (CDNs) that use anycast service addresses while delivering data from edge locations that do not announce those addresses. In such deployments, a request is received by the anycast server or location, but the response is sent directly by another server (i.e., the edge location) with the anycast service address as the source address, rather than the address used to reach the edge server. This can create a legitimate hidden-prefix scenario.
