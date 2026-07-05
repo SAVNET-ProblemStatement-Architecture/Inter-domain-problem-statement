@@ -6,7 +6,7 @@ submissiontype: IETF
 area: Routing
 wg: SAVNET
 
-docname: draft-ietf-savnet-inter-domain-problem-statement-18
+docname: draft-ietf-savnet-inter-domain-problem-statement-20
 
 title: Problem Statement, Gap Analysis, and Requirements for Inter-Domain Source Address Validation 
 abbrev: Inter-domain SAVNET Problem Statement
@@ -48,19 +48,22 @@ author:
 
 normative:
   RFC2827:
+  RFC4271:
   RFC5210:
   RFC3704:
   RFC8704:
-  I-D.ietf-savnet-intra-domain-problem-statement:
 
 informative:
   RFC1997:
-  RFC4271:
+  RFC6996:
   RFC7908:
   RFC9234:
   RFC7094:
   RFC4364:
   RFC4786:
+  RFC8416:
+  I-D.ietf-savnet-intra-domain-problem-statement:
+  I-D.ietf-sidrops-aspa-slurm:
   
   Cisco:
     target: https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_irg-remove-as-0.html 
@@ -124,11 +127,11 @@ This document analyzes the problem space and provides a gap analysis of existing
 
 --- middle
 
-# Introduction
+# Introduction {#intro}
 
-Source Address Validation (SAV) is a fundamental mechanism for detecting and mitigating source address spoofing attacks {{RFC2827}} {{RFC5210}} {{RFC3704}} {{RFC8704}}. Inter-domain SAV checks the source addresses of data traffic received from a neighboring AS, whether that traffic originated within the neighbor's network or is being transited through it. Inter-domain SAV is applied at border routers to incoming traffic on external interfaces directly connected to a neighboring AS. The local AS (SAV performing AS) and the neighbor AS are connected using external BGP (eBGP). The neighbor AS could be using either a public ASN or a private ASN.  
+Source Address Validation (SAV) is a fundamental mechanism for detecting and mitigating source address spoofing attacks {{RFC2827}} {{RFC5210}} {{RFC3704}} {{RFC8704}}. Inter-domain SAV, defined in the context of Internet routing using BGP-4 {{RFC4271}}, checks the source addresses of data traffic received from a neighboring AS, whether that traffic originated within the neighbor's network or is being transited through it. Inter-domain SAV is applied at border routers to incoming traffic on external interfaces directly connected to a neighboring AS. The local AS (SAV performing AS) and the neighbor AS are connected using external BGP (eBGP). The neighbor AS could be using either a public AS number (ASN) or a private ASN {{RFC6996}}.  
 
-This document analyzes the problem space and provides a gap analysis of existing inter-domain source address validation (SAV) mechanisms. Based on these findings, it outlines the technical requirements for future improvements.
+This document analyzes the problem space and provides a gap analysis of existing inter-domain SAV mechanisms. Based on these findings, it outlines the technical requirements for future improvements.
 The corresponding work related to intra-domain SAV is documented in [I-D.ietf-savnet-intra-domain-problem-statement], which includes SAV for hosts and customers (non-AS) connected to the AS {{SAC-004}}.
 
 The eBGP sessions between the border routers of the SAV performing AS and the neighbor ASes may include Customer-to-Provider (C2P), Provider-to-Customer (P2C), lateral peering (P2P), and Route Server (RS) to RS-client connection. The terms customer, provider (transit provider), and lateral peer (non-transit peer; peer (for simplicity)) used in this document are consistent with those defined in {{RFC7908}} {{RFC9234}}. Further, {{RFC9234}} mentions RS and RS-client. An RS-to-RS-client interface is akin to the customer interface. For the purposes of SAV, an RS-client-to-RS interface may be treated (1) like a provider interface for simplicity, or (2) like a union of lateral peers considering all the ASes the RS-client chose to peer with at the IXP RS.
@@ -161,8 +164,6 @@ To address these problems, this document specifies ({{req}}) the following key t
 
 Note that this document focuses on inter-domain SAV mechanisms that validate and filter packets without modifying data plane packets ({{scope}}). This scope limitation is intentional, since allowing packet modification would introduce additional design, forwarding, interoperability, and deployment considerations beyond the problem space studied in this document. Therefore, SAV mechanisms based on data packet modification are outside the scope of this document.
 
-Note: Private AS was mentioned earlier. Private ASes may occur in the context of internal peering. These private AS numbers are not visible externally in eBGP due their removal using features such as remove-private-as {{Cisco}} or remove-private {{Juniper}}.
-
 # Terminology {#terminology}
 
 {:vspace}
@@ -179,16 +180,18 @@ Customer Cone:
 : The Customer Cone (CC) of a given AS, denoted as AS-A, includes: (1) AS-A itself, (2) AS-A's direct customers (ASes), (3) The customers of AS-A's direct customers (indirect customers), (4) And so on, recursively, following all chains of provider-to-customer (P2C) links down the hierarchy.
 
 Prefixes in the CC:
-: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more ASes within the CC.
-
-Configuration Information: 
-: This is information that an AS configures locally. For example, an AS has provisioned (suballocated) prefixes p1 and p2 for use by a customer network (non-BGP), which happens to also own a prefix p3 directly allocated by an RIR. The customer informs the AS that p1 must be advertised in eBGP on the public Internet, p2 is strictly used internally within the customer network, and p3 must not to be advertised (by this AS) but may be used for sourcing traffic emitted to the Internet. The AS locally configures these prefixes accordingly. This configuration information is used locally for route origination and SAV filtering purposes.    
+: IP prefixes permitted by their owners to be originated by, or used as source addresses for data traffic originated from, one or more ASes within the CC.  
 
 SAV-related Information:
-: Routing information (e.g., RIB and FIB) and objects published in the Resource Public Key Infrastructure (RPKI) that were originally proposed for non-SAV purposes but may also be used for SAV. The RPKI objects include existing RPKI object types (e.g., ROAs and ASPAs) as well as any new types that may be proposed.
+: Routing information (e.g., RIBs and FIBs populated by routing protocols or by the local configuration information -- described below -- provided by the AS operator) and objects published in the Resource Public Key Infrastructure (RPKI) that were originally proposed for non-SAV purposes but may also be used for SAV. The RPKI objects include existing RPKI object types (e.g., ROAs and ASPAs) as well as any new types that may be proposed.
 
 SAV-specific Information:
-: Information dedicated to SAV, which may be defined and exchanged between ASes using potentially new inter-AS communication protocol or an extension of an existing protocol. The information may also take the form of new RPKI object type(s) or management information from operators.
+: Information dedicated to SAV, which may be defined and exchanged between ASes using potentially new inter-AS communication protocol or an extension of an existing protocol. The information may also take the form of new RPKI object type(s). It may also come from the local configuration information provided by the AS operator.
+
+Configuration Information: 
+: This information is configured locally by the AS operator. For example, an AS provisions (suballocates) prefixes p1 and p2 for a non-BGP customer network, which also owns an RIR-allocated prefix p3. The customer instructs the AS to advertise p1 via eBGP on the public Internet, restrict p2 strictly to internal use (in the customer network), and refrain from advertising p3 while still allowing it to source outbound traffic. The AS locally configures these prefixes accordingly. This configuration information is valuable for both intra-domain SAV to permit expected prefixes and inter-domain SAV at other interfaces to block unexpected prefixes. 
+      
+<!-- The AS uses this configuration information locally for route origination and SAV filtering purposes. The configuration information can be viewed partly as SAV-related information (e.g., prefixes p1, p2) and partly as SAV-specific information (e.g., prefix p3). -->
 
 Direct Server Return (DSR): 
 : A traffic delivery model commonly used by Content Delivery Networks (CDNs) that use anycast service addresses while delivering data from edge locations that do not announce those addresses. In such deployments, a request is received by the anycast server or location, but the response is sent directly by another server (i.e., the edge location) with the anycast service address as the source address, rather than the address used to reach the edge server. This can create a legitimate hidden-prefix scenario.
@@ -516,11 +519,17 @@ Any new inter-domain SAV mechanism should achieve efficient convergence of the S
 In this context, convergence refers to the stabilization of the SAV tables on the AS-to-AS interfaces performing SAV.
 It is essential that any new SAV mechanism converges to the correct updated SAV table in a proper manner, minimizing both improper block and improper permit during the process.
 
-* Discussion: Any new SAV proposal should keep the following guidelines in consideration. The initial SAV table computation (prior to SAV enforcement installation) must be performed only when the data used in the computation (e.g., routing tables, RPKI data) are in a stable (i.e., non-transient) state from the local AS's perspective. For instance, if an ASBR in the SAV performing AS is newly deployed or restarted, then sufficient time must be allowed for routing state convergence to complete before the initial SAV table computation is performed. Similar statement applies for the ASBR with regard to RPKI data convergence. After SAV enforcement installation, the SAV table should be dynamically and quickly updated when new prefixes are discovered (e.g., from BGP Updates or RPKI data updates) for inclusion the table. However, for removing a prefix from the SAV table (e.g., due to route withdrawal or RPKI changes), applying hysteresis (<xref target="RFC8704" sectionFormat="comma" section="3.6.2"/>) should be considered in the SAV design.
+* Additional considerations: Any new SAV proposal should keep the following guidelines in consideration. The initial SAV table computation (prior to SAV enforcement installation) must be performed only when the data used in the computation (e.g., routing tables, RPKI data) are in a stable (i.e., non-transient) state from the local AS's perspective. For instance, if an ASBR in the SAV performing AS is newly deployed or restarted, then sufficient time must be allowed for routing state convergence to complete before the initial SAV table computation is performed. Similar statement applies for the ASBR with regard to RPKI data convergence. After SAV enforcement installation, the SAV table should be dynamically and quickly updated when new prefixes are discovered (e.g., from BGP Updates or RPKI data updates) for inclusion the table. However, for removing a prefix from the SAV table (e.g., due to route withdrawal or RPKI changes), applying hysteresis (<xref target="RFC8704" sectionFormat="comma" section="3.6.2"/>) should be considered in the SAV design.
 
-# Trouble Shooting as an Operational Consideration
+# Requirement of Troubleshooting
 
-Any new inter-domain SAV solution document should consider including a section on trouble shooting practices. As an ASBR performs SAV based on a computed SAV table (using a specified method), it is not possible for it to sense improper block or improper permit, if any, as part of the SAV enforcement. The trouble shooting of any improper block or improper permit is likely to be in the form of an operational practice of receiving complaints from the affected parties and investigating the root cause.      
+Any new inter-domain SAV solution document should incorporate troubleshooting guidelines within its operational considerations section. Because an ASBR enforces SAV based strictly on a statically or dynamically computed SAV table, it cannot inherently detect its own validation errors, such as false positives (improper blocks) or false negatives (improper permits). Consequently, troubleshooting these anomalies will rely on operational feedback loops, where network operators receive, investigate, and resolve routing and reachability complaints from affected downstream or peering parties.
+
+# Requirement for Consideration of Private ASes
+
+Private AS was mentioned in {{intro}}. A public AS may serve as a transit gateway for a routing zone utilizing private ASes. These private AS numbers are not visible in external eBGP advertisements because the transit public AS strips them from the AS_PATH using standard vendor features, such as remove-private-as {{Cisco}} or remove-private {{Juniper}}.   
+
+A routing zone or network utilizing only private ASes can still adopt any new inter-domain SAV solutions developed for the public Internet. Implementing these solutions in such environments requires suitable operational modifications, such as employing SLURM (Simplified Local Internet Number Resource Management with the RPKI) {{RFC8416}} {{I-D.ietf-sidrops-aspa-slurm}} to locally register and assert RPKI objects (e.g., ROAs and ASPAs) strictly within the network consisting of private ASes. Any new inter-domain SAV solution document should incorporate recommendations for suitable operational modifications for this scenario, as necessary.  
 
 # Inter-domain SAV Scope {#scope}
 
