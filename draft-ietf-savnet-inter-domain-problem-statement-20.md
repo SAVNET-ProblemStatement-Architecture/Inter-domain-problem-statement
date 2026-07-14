@@ -36,7 +36,7 @@ author:
   org: Huawei
   city: Beijing
   country: China
-  email: huangmingqing@huawei.com
+  email: huangmq@vip.sina.com
 - ins: K. Sriram
   name: Kotikalapudi Sriram
   org: USA National Institute of Standards and Technology
@@ -568,5 +568,5 @@ Nan Geng
 # Acknowledgements {#Acknowledgements}
 {: numbered="false"}
 
-Many thanks to Jared Mauch, Barry Greene, Fang Gao, Anthony Somerset, Yuanyuan Zhang, Igor Lubashev, Alvaro Retana, Joel Halpern, Ron Bonica, Aijun Wang, Michael Richardson, Li Chen, Gert Doering, Mingxing Liu, John O'Brien, Roland Dobbins, Paul Vixie, Amir Herzberg, Jeffrey Haas, and Xueyan Song for their reviews, comments, and suggestions. 
+Many thanks to Jared Mauch, Barry Greene, Fang Gao, Anthony Somerset, Yuanyuan Zhang, Igor Lubashev, Alvaro Retana, Joel Halpern, Ron Bonica, Aijun Wang, Michael Richardson, Li Chen, Gert Doering, Mingxing Liu, John O'Brien, Roland Dobbins, Paul Vixie, Amir Herzberg, Jeffrey Haas, Xueyan Song, and Jianping Wu for their reviews, comments, and suggestions. 
 Apologies to any others whose names the authors may have inadvertently missed mentioning. 
