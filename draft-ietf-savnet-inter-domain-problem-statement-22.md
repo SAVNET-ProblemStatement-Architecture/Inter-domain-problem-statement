@@ -518,14 +518,10 @@ The requirement applies for all directions of AS peering (customer, provider, an
 
 Any new inter-domain SAV mechanism should be able to automatically detect changes in the SAV-related information ({{terminology}}) and/or SAV-specific information ({{terminology}}) required for generating the SAV table, obtain the updated information, and use the updated information to generate the SAV table.
 
-The reduction in operational overhead can be assessed in terms of the operator effort required to configure the SAV mechanism and maintain its SAV table as relevant network information changes. Such assessments may compare the number of manual interventions required by a new mechanism with those of existing SAV mechanisms under comparable operational conditions.
-
 ## Early Adopters Benefit in Incremental/Partial Deployment
 
 Any new inter-domain SAV mechanism must not assume pervasive adoption of the SAV method, the SAV-related information, or the SAV-specific information. It should benefit early adopters by providing effective protection from spoofing of source addresses even in partial deployment.
 Where the SAV-related or SAV-specific information a new mechanism relies on is absent for a prefix or an AS, the mechanism should not improperly block more traffic than the existing mechanism it replaces (e.g., EFP-uRPF Alg-B {{RFC8704}} on customer interfaces).
-
-The benefits of partial deployment can be assessed at the AS-to-AS interfaces where the mechanism is deployed. The improvements can be evaluated by comparing improper block and improper permit rates with those of existing SAV mechanisms under the relevant scenarios described in {{gap}}.
 
 ## Providing Necessary Security Guarantee
 
